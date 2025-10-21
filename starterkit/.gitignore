@@ -1,0 +1,8 @@
+/build
+node_modules
+.vscode
+coverage
+# IntelliJ
+.idea/
+.DS_Store
+stats.html

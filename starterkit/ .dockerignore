@@ -1,0 +1,13 @@
+# Ignore everything in context
+**
+
+# Exclusions
+!.npmrc
+!package.json
+!package-lock.json
+!docker/**
+!.env
+!env.sh
+!public/**
+!src/**
+!tsconfig.json
