@@ -1,0 +1,105 @@
+image: fsc-reg.repo
+
+variables:
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  PROJECT_NAME: $CI_PROJECT_NAME
+  NEXUS_SOURCE: "# ваш источник в нексусе"
+
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_BRANCH == "main"
+default:
+  tags:
+    - docker-only
+
+cache: &global_cache
+  key:
+    files:
+      - ./package-lock.json
+  paths:
+    - node_modules/
+    - .npmrc
+  policy: pull-push
+
+stages:
+  - install
+  - test
+
+install:
+  stage: install
+  tags:
+    - docker-only
+  cache:
+    <<: *global_cache
+    policy: pull-push
+  script:
+    - |-
+      if [ ! -d "./node_modules" ] ; then
+          echo "Cache doesn't exist. Start setup"
+          npm ci
+      else
+          echo "Cache already exists. Skip setup"
+      fi
+
+lint:
+  stage: test
+  tags:
+    - docker-only
+  dependencies:
+    - install
+  script:
+    - npm run lint
+  cache:
+    <<: *global_cache
+    policy: pull
+
+unit tests:
+  stage: test
+  tags:
+    - docker-only
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  dependencies:
+    - install
+  script:
+    - npm run test
+  cache:
+    <<: *global_cache
+    policy: pull
+    paths:
+      - coverage/
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - coverage/junit.xml
+      cobertura: coverage/cobertura-coverage.xml
+
+sonarqube:
+  image:
+    name: fsc-reg.repo
+    entrypoint: [""]
+  needs:
+    - unit tests
+    # - dependency-check
+  stage: test
+  cache:
+    <<: *global_cache
+    policy: pull
+  script:
+    - >
+      sonar-scanner -X
+      -Dsonar.qualitygate.wait=true
+      -Dsonar.login=${SONAR_TOKEN}
+      -Dsonar.host.url=${SONAR_URL}
+      -Dsonar.projectKey=${PROJECT_NAME}
+      -Dsonar.branch.name=${CI_COMMIT_REF_NAME}
+      -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+      # -Dsonar.dependencyCheck.jsonReportPath=./dependencycheckreport/dependency-check-report.json
+      # -Dsonar.dependencyCheck.htmlReportPath=./dependencycheckreport/dependency-check-report.html
+      # -Dsonar.exclusions=dependencycheckreport/dependency-check-report.html
+      # -Dsonar.coverage.exclusions=dependencycheckreport/dependency-check-report.html
+      # -Dsonar.cpd.exclusions=dependencycheckreport/dependency-check-report.html
+      -Dsonar.cpd.exclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+  allow_failure: true

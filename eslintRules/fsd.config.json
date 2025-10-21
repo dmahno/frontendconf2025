@@ -1,0 +1,53 @@
+{"no-restricted-imports": [
+  "error",
+  {
+    "paths": [],
+    "patterns": [
+      // --- Запрет импорта верхних слоёв в нижние ---
+      {
+        "group": ["features/**", "widgets/**", "pages/**", "processes/**"],
+        "message": "Слой shared не может импортировать верхние слои. Импортируй только shared/*"
+      },
+      {
+        "group": ["widgets/**", "pages/**", "processes/**"],
+        "message": "Слой entities не может импортировать верхние слои. Импортируй только entities/* и shared/*"
+      },
+      {
+        "group": ["widgets/**", "pages/**", "processes/**"],
+        "message": "Слой features не может импортировать верхние слои. Импортируй только features/*, entities/* и shared/*"
+      },
+      {
+        "group": ["pages/**"],
+        "message": "Слой processes не может импортировать верхние слои. Импортируй только processes/*, features/*, entities/* и shared/*"
+      },
+
+      // --- Запрет прямых импортов из внутренних подпапок (всё должно идти через index.ts) ---
+      {
+        "group": ["*/model/**"],
+        "message": "Нельзя напрямую импортировать model. Используй public API — index.ts в корне слоя."
+      },
+      {
+        "group": ["*/ui/**"],
+        "message": "Нельзя напрямую импортировать ui. Используй public API — index.ts в корне слоя."
+      },
+      {
+        "group": ["*/lib/**"],
+        "message": "Нельзя напрямую импортировать lib. Используй public API — index.ts в корне слоя."
+      },
+      {
+        "group": ["*/config/**"],
+        "message": "Нельзя напрямую импортировать config. Используй public API — index.ts в корне слоя."
+      },
+      {
+        "group": ["*/api/**"],
+        "message": "Нельзя напрямую импортировать api. Используй public API — index.ts в корне слоя."
+      },
+
+      // --- Запрет прямого импорта сущностей без public API ---
+      {
+        "group": ["pages/*", "widgets/*", "features/*", "entities/*", "processes/*"],
+        "message": "Импортируй через public API слоя (например, features/SomeFeature)"
+      }
+    ]
+  }
+]}
